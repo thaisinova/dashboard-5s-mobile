@@ -549,10 +549,10 @@ function buildTrimestral(){
       <div class="tri-head" style="border-bottom:3px solid ${colors[qi]}">
         <div><div class="tri-title">${q.label} · ${q.months.map(m=>ABBR[m]).join(' + ')}</div>
         <div class="tri-months">${meses.length} mês${meses.length!==1?'es':''} auditado${meses.length!==1?'s':''}</div></div>
-        <div class="tri-media">${media?(media*meses.length).toFixed(1):'—'}</div>
+        <div class="tri-media">${media?(media*meses.length).toFixed(1):'—'}<small style="font-size:11px;font-weight:400;opacity:.5"> /${meses.length*20}</small></div>
       </div>
       <div class="tri-body">${!hasAny?`<div class="tri-empty">Sem dados neste trimestre</div>`:
-        sorted.slice(0,5).map((si,pos)=>{
+        sorted.map((si,pos)=>{
           const icon=pos===0?'🥇':pos===1?'🥈':pos===2?'🥉':'';
           return`<div class="tri-row">
             ${icon?`<div class="tri-rank-num">${icon}</div>`:`<div class="tri-rank-pos">#${pos+1}</div>`}
