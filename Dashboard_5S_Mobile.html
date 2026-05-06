@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#3D3935">
+<title>5S Inova</title>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Outfit:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --red:#C8102E;--dark:#3D3935;--green:#2E7D32;--amber:#B8860B;
+  --bg:#F5F3F1;--white:#FFFFFF;--border:#E8E4E0;--muted:#8C8580;
+  --gold:#C9A84C;--silver:#8C9196;--bronze:#B87333;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
+}
+html,body{height:100%;background:var(--bg);font-family:'Lato',sans-serif;overflow:hidden}
+
+/* ── LOCK SCREEN ─────────────────────────────── */
+#lock{
+  position:fixed;inset:0;z-index:999;
+  background:var(--dark);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
+  padding:24px;
+}
+.lock-logo{width:80px;margin-bottom:28px;opacity:.95}
+.lock-title{font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;color:#fff;letter-spacing:.5px;margin-bottom:4px}
+.lock-sub{font-size:13px;color:rgba(255,255,255,.45);margin-bottom:36px;letter-spacing:.5px}
+.lock-box{width:100%;max-width:320px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:24px}
+.lock-label{font-size:11px;color:rgba(255,255,255,.5);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px}
+.lock-input{
+  width:100%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+  border-radius:8px;padding:14px 16px;font-size:16px;color:#fff;
+  outline:none;letter-spacing:3px;font-family:'Lato',sans-serif;
+}
+.lock-input::placeholder{letter-spacing:0;color:rgba(255,255,255,.3)}
+.lock-input:focus{border-color:var(--red);background:rgba(255,255,255,.15)}
+.lock-err{font-size:12px;color:#ff6b6b;margin-top:8px;min-height:18px}
+.lock-btn{
+  width:100%;margin-top:16px;background:var(--red);color:#fff;border:none;
+  border-radius:8px;padding:15px;font-size:15px;font-weight:900;
+  font-family:'Outfit',sans-serif;letter-spacing:.5px;cursor:pointer;
+  transition:opacity .2s;
+}
+.lock-btn:active{opacity:.8}
+
+/* ── APP SHELL ───────────────────────────────── */
+#app{display:none;flex-direction:column;height:100%;height:100dvh}
+
+/* Header */
+.hdr{
+  background:var(--dark);color:#fff;
+  padding:calc(var(--safe-top) + 10px) 16px 12px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;position:relative;z-index:10;
+}
+.hdr-logo{height:22px;object-fit:contain}
+.hdr-title{font-family:'Outfit',sans-serif;font-size:15px;font-weight:900;letter-spacing:.3px;flex:1;text-align:center}
+.hdr-reload{background:none;border:none;color:rgba(255,255,255,.6);font-size:18px;cursor:pointer;padding:4px;transition:transform .5s}
+.hdr-reload.spin{transform:rotate(360deg)}
+
+/* Month selector bar */
+.msel{
+  background:var(--dark);border-top:1px solid rgba(255,255,255,.08);
+  padding:0 12px 12px;display:flex;align-items:center;gap:8px;flex-shrink:0
+}
+.msel select{
+  flex:1;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);
+  border-radius:8px;color:#fff;padding:9px 12px;font-size:14px;font-weight:700;
+  font-family:'Lato',sans-serif;outline:none;-webkit-appearance:none;
+}
+.msel-arrow{color:rgba(255,255,255,.4);font-size:12px;margin-left:-28px;pointer-events:none}
+.msel-badge{
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);
+  border-radius:8px;padding:9px 14px;font-size:12px;color:rgba(255,255,255,.6);
+  white-space:nowrap;font-weight:700;
+}
+
+/* Content */
+#content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--safe-bot) + 68px)}
+
+/* Panels */
+.panel{display:none;padding:0 0 16px}
+.panel.active{display:block;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Bottom nav */
+.nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:10;
+  background:var(--dark);border-top:1px solid rgba(255,255,255,.08);
+  padding:0 0 var(--safe-bot);
+  display:flex;
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:10px 4px 8px;cursor:pointer;border:none;background:none;
+  color:rgba(255,255,255,.4);transition:color .2s;
+  font-size:10px;font-weight:700;letter-spacing:.3px;gap:4px;
+}
+.nav-item .ni{font-size:20px}
+.nav-item.active{color:var(--red)}
+
+/* ── CARDS KPI ───────────────────────────────── */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 12px 0}
+.kpi{background:var(--white);border-radius:12px;padding:14px;border:1px solid var(--border);position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi.k-avg::before{background:var(--red)}
+.kpi.k-best::before{background:var(--green)}
+.kpi.k-worst::before{background:var(--red)}
+.kpi.k-evo::before{background:#1565C0}
+.kpi-lbl{font-size:9px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.kpi-val{font-family:'Outfit',sans-serif;font-size:22px;font-weight:900;line-height:1.1;overflow-wrap:break-word;word-break:break-word}
+.kpi-val.gn{color:var(--green)}.kpi-val.rd{color:var(--red)}.kpi-val.bl{color:#1565C0}
+.kpi-sub{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.3}
+.kpi-sub.ok{color:var(--green);font-weight:700}.kpi-sub.warn{color:var(--amber);font-weight:700}.kpi-sub.up{color:var(--green)}
+
+/* ── PODIUM ──────────────────────────────────── */
+.podium-wrap{padding:16px 12px 0}
+.podium-lbl{font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;padding-left:2px}
+.podium{display:flex;align-items:flex-end;gap:8px;height:130px}
+.pod-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:0}
+.pod-name{font-size:10px;font-weight:700;color:var(--dark);text-align:center;line-height:1.2;margin-bottom:4px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.pod-pts{font-size:10px;color:var(--red);font-weight:700;margin-bottom:3px}
+.pod-bar{width:100%;border-radius:6px 6px 0 0;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:24px;font-weight:900;color:#fff}
+.pod-bar.p1{background:var(--red);height:72px}
+.pod-bar.p2{background:var(--dark);height:55px}
+.pod-bar.p3{background:#8C8580;height:42px}
+
+/* ── RANKING ─────────────────────────────────── */
+.rank-hdr{
+  background:var(--dark);color:#fff;margin:16px 12px 0;
+  border-radius:10px 10px 0 0;padding:10px 14px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.rank-hdr-lbl{font-family:'Outfit',sans-serif;font-size:12px;font-weight:900;letter-spacing:1px}
+.rank-cols{display:flex;gap:6px}
+.rank-col-lbl{font-size:9px;color:rgba(255,255,255,.5);letter-spacing:.5px;text-align:center}
+.rank-col-lbl.w1{width:36px}.rank-col-lbl.w2{width:36px}.rank-col-lbl.w3{width:40px}
+
+.rank-list{background:var(--white);margin:0 12px;border-radius:0 0 10px 10px;border:1px solid var(--border);border-top:none;overflow:hidden}
+.rank-row{
+  display:flex;align-items:center;padding:10px 14px;gap:10px;
+  border-bottom:1px solid var(--border);transition:background .15s;
+}
+.rank-row:last-child{border-bottom:none}
+.rank-row:active{background:#F5F3F1}
+.rk-pos{width:24px;text-align:center;flex-shrink:0}
+.rk-pos .pos-ico{font-size:18px}
+.rk-pos .pos-num{font-size:12px;font-weight:900;color:var(--muted)}
+.rk-name{flex:1;font-size:13px;font-weight:700;color:var(--dark);line-height:1.3}
+.rk-ant{width:26px;text-align:center;font-size:11px;color:var(--muted);flex-shrink:0}
+.rk-nota{width:34px;flex-shrink:0}
+.nota-badge{border-radius:6px;padding:5px 4px;text-align:center;font-size:14px;font-weight:900;font-family:'Outfit',sans-serif}
+.nota-badge.gn{background:#E8F5E9;color:var(--green)}
+.nota-badge.am{background:#FFF8E1;color:var(--amber)}
+.nota-badge.rd{background:#FFEBEE;color:var(--red)}
+.rk-var{width:38px;text-align:center;flex-shrink:0;font-size:11px;font-weight:700}
+.rk-var.up{color:var(--green)}.rk-var.dn{color:var(--red)}.rk-var.eq{color:var(--muted)}
+
+/* ── TRIMESTRAL ──────────────────────────────── */
+.tri-grid{display:flex;flex-direction:column;gap:10px;padding:12px}
+.tri-card{background:var(--white);border-radius:12px;border:1px solid var(--border);overflow:hidden}
+.tri-head{background:var(--dark);padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
+.tri-title{font-family:'Outfit',sans-serif;font-size:14px;font-weight:900;color:#fff}
+.tri-months{font-size:10px;color:rgba(255,255,255,.4);margin-top:2px}
+.tri-media{font-size:18px;font-weight:900;color:var(--red);font-family:'Outfit',sans-serif}
+.tri-body{padding:0}
+.tri-row{display:flex;align-items:center;padding:9px 14px;border-bottom:1px solid var(--border);gap:10px}
+.tri-row:last-child{border-bottom:none}
+.tri-rank-num{width:22px;text-align:center;font-size:20px}
+.tri-rank-pos{font-size:11px;font-weight:900;color:var(--muted);width:22px;text-align:center}
+.tri-row-name{flex:1;font-size:13px;font-weight:700;color:var(--dark)}
+.tri-row-pts{font-size:13px;font-weight:900;color:var(--dark)}
+.tri-empty{padding:24px;text-align:center;color:var(--muted);font-size:13px}
+
+/* ── ANUAL ───────────────────────────────────── */
+.anual-kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 12px 0}
+.anual-row{
+  display:flex;align-items:center;padding:10px 14px;gap:10px;
+  border-bottom:1px solid var(--border);
+}
+.anual-row:last-child{border-bottom:none}
+.anual-num{width:22px;text-align:center;flex-shrink:0}
+.anual-name{flex:1;font-size:13px;font-weight:700;color:var(--dark)}
+.anual-media{width:40px;text-align:center;font-size:12px;font-weight:700;color:var(--muted)}
+.anual-soma{width:50px;flex-shrink:0}
+
+/* ── LOADING / EMPTY ─────────────────────────── */
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;color:var(--muted);gap:12px}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:40px 24px;color:var(--muted);font-size:13px}
+
+/* ── TOAST ───────────────────────────────────── */
+#toast{
+  position:fixed;top:calc(var(--safe-top) + 60px);left:12px;right:12px;z-index:9999;
+  background:var(--dark);color:#fff;border-radius:10px;padding:12px 16px;
+  font-size:13px;font-weight:700;text-align:center;
+  opacity:0;transform:translateY(-10px);transition:opacity .3s,transform .3s;
+  pointer-events:none;
+}
+
+/* ── PULL INDICATOR ──────────────────────────── */
+.pull-ind{text-align:center;padding:8px;font-size:11px;color:var(--muted);height:0;overflow:hidden;transition:height .2s}
+.pull-ind.show{height:32px}
+</style>
+</head>
+<body>
+
+<!-- LOCK SCREEN -->
+<div id="lock">
+  <img class="lock-logo" src="https://www.inova.ind.br/assets/img/logoInova.png" onerror="this.style.display='none'" alt="Inova">
+  <div class="lock-title">Programa 5S</div>
+  <div class="lock-sub">INOVA SISTEMAS ELETRÔNICOS</div>
+  <div class="lock-box">
+    <div class="lock-label">Senha de acesso</div>
+    <input class="lock-input" type="password" id="pwdInput" placeholder="••••••••"
+      onkeydown="if(event.key==='Enter')checkPwd()">
+    <div class="lock-err" id="pwdErr"></div>
+    <button class="lock-btn" onclick="checkPwd()">ENTRAR</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- Header -->
+  <div class="hdr">
+    <img class="hdr-logo" src="https://www.inova.ind.br/assets/img/logoInova.png" onerror="this.style.display='none'" alt="">
+    <span class="hdr-title">PROGRAMA 5S</span>
+    <button class="hdr-reload" id="reloadBtn" onclick="reload()" title="Atualizar">↻</button>
+  </div>
+
+  <!-- Month selector (only for mensal) -->
+  <div class="msel" id="mselBar">
+    <select id="monthSel" onchange="updateMensal()">
+      <option value="0">Janeiro</option><option value="1">Fevereiro</option>
+      <option value="2">Março</option><option value="3">Abril</option>
+      <option value="4">Maio</option><option value="5">Junho</option>
+      <option value="6">Julho</option><option value="7">Agosto</option>
+      <option value="8">Setembro</option><option value="9">Outubro</option>
+      <option value="10">Novembro</option><option value="11">Dezembro</option>
+    </select>
+    <span class="msel-arrow">▼</span>
+    <span class="msel-badge" id="metaBadge">Meta ≥ 18</span>
+  </div>
+
+  <!-- Content -->
+  <div id="content">
+    <div class="pull-ind" id="pullInd">↓ Soltando para atualizar...</div>
+
+    <!-- MENSAL -->
+    <div class="panel active" id="panel-mensal">
+      <div id="kpiGrid" class="kpi-grid"></div>
+      <div class="podium-wrap">
+        <div class="podium-lbl">Pódio do Mês</div>
+        <div class="podium" id="podium"></div>
+      </div>
+      <div class="rank-hdr">
+        <span class="rank-hdr-lbl">RANKING COMPLETO</span>
+        <div class="rank-cols">
+          <div class="rank-col-lbl w1">ANT</div>
+          <div class="rank-col-lbl w2">NOTA</div>
+          <div class="rank-col-lbl w3">VAR</div>
+        </div>
+      </div>
+      <div class="rank-list" id="rankList"></div>
+    </div>
+
+    <!-- TRIMESTRAL -->
+    <div class="panel" id="panel-tri">
+      <div class="tri-grid" id="triGrid"></div>
+    </div>
+
+    <!-- ANUAL -->
+    <div class="panel" id="panel-anual">
+      <div class="anual-kpi-grid" id="anualKpis"></div>
+      <div class="rank-hdr" style="margin-top:16px">
+        <span class="rank-hdr-lbl">RANKING ACUMULADO</span>
+        <div class="rank-cols">
+          <div class="rank-col-lbl w2">MÉDIA</div>
+          <div class="rank-col-lbl w3">TOTAL</div>
+        </div>
+      </div>
+      <div class="rank-list" id="anualList"></div>
+    </div>
+  </div>
+
+  <!-- Bottom nav -->
+  <div class="nav">
+    <button class="nav-item active" id="nav-mensal" onclick="showPanel('mensal')">
+      <span class="ni">📅</span><span>Mensal</span>
+    </button>
+    <button class="nav-item" id="nav-tri" onclick="showPanel('tri')">
+      <span class="ni">📊</span><span>Trimestral</span>
+    </button>
+    <button class="nav-item" id="nav-anual" onclick="showPanel('anual')">
+      <span class="ni">🏆</span><span>Anual</span>
+    </button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── CONFIG ─────────────────────────────────────────────────────────
+const SENHA   = '5s2026';
+const API_KEY = '$2a$10$KNdROZHfjqd6AoL4WBeAN.daX384YekFBY7Af7iXNeRF3UBeOvkcC';
+const META    = 18;
+const MONTHS  = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const ABBR    = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const QUARTERS= [{label:'T1',months:[0,1,2]},{label:'T2',months:[3,4,5]},{label:'T3',months:[6,7,8]},{label:'T4',months:[9,10,11]}];
+
+let BIN_ID  = localStorage.getItem('inova5s_bin') || '69cd68d2856a682189ee6aea';
+let SCORES  = {};
+let S_SCORES= {};
+let SECTORS = [];
+let N = 0;
+let activePanel = 'mensal';
+
+// ── LOCK ────────────────────────────────────────────────────────────
+function checkPwd(){
+  const v = document.getElementById('pwdInput').value;
+  if(v === SENHA){
+    document.getElementById('lock').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    init();
+  } else {
+    document.getElementById('pwdErr').textContent = 'Senha incorreta.';
+    document.getElementById('pwdInput').value = '';
+    document.getElementById('pwdInput').focus();
+  }
+}
+
+// ── UTIL ────────────────────────────────────────────────────────────
+function scoreColor(v){
+  if(v>=18) return {bg:'#E8F5E9',fg:getComputedStyle(document.documentElement).getPropertyValue('--green').trim()||'#2E7D32',cls:'gn'};
+  if(v>=14) return {bg:'#FFF8E1',fg:getComputedStyle(document.documentElement).getPropertyValue('--amber').trim()||'#B8860B',cls:'am'};
+  return {bg:'#FFEBEE',fg:'#C8102E',cls:'rd'};
+}
+function calcTotal(ss){return ss[0]+ss[1]+ss[2]+ss[3]+ss[4]-(ss[5]||0);}
+function hasData(mi){return SCORES[mi]&&Object.keys(SCORES[mi]).length>0&&Object.values(SCORES[mi]).some(v=>v>0);}
+function avg(vals){const v=vals.filter(x=>x>0);return v.length?v.reduce((a,b)=>a+b,0)/v.length:0;}
+function comp(mi,si){
+  const n=SCORES[mi]?SCORES[mi][si]||0:0; if(!n)return 0;
+  const ss=S_SCORES[mi]&&S_SCORES[mi][si]?S_SCORES[mi][si]:[0,0,0,0,0,0];
+  const actual=n*1e12+ss[0]*1e11+ss[1]*1e10+ss[2]*1e9+ss[3]*1e8+ss[4]*1e7;
+  if(mi===0)return actual;
+  const np=SCORES[mi-1]?SCORES[mi-1][si]||0:0;
+  const sp=S_SCORES[mi-1]&&S_SCORES[mi-1][si]?S_SCORES[mi-1][si]:[0,0,0,0,0,0];
+  const prev=np*1e5+sp[0]*1e4+sp[1]*1e3+sp[2]*1e2+sp[3]*10+sp[4];
+  return actual+prev;
+}
+function showToast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.style.background=type==='ok'?'#2E7D32':type==='err'?'#C8102E':'#3D3935';
+  t.style.opacity='1';t.style.transform='translateY(0)';
+  clearTimeout(t._tmr);
+  t._tmr=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(-10px)';},3500);
+}
+
+// ── DATA ────────────────────────────────────────────────────────────
+async function binLoad(){
+  if(!BIN_ID)return false;
+  try{
+    const r=await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`,{
+      headers:{'X-Master-Key':API_KEY,'X-Bin-Meta':'false'}
+    });
+    if(!r.ok)return false;
+    const d=await r.json();
+    if(d.SCORES)SCORES=d.SCORES;
+    if(d.S_SCORES)S_SCORES=d.S_SCORES;
+    if(d.SECTORS&&d.SECTORS.length){SECTORS=d.SECTORS;N=SECTORS.length;}
+    return true;
+  }catch(e){return false;}
+}
+
+async function reload(){
+  const btn=document.getElementById('reloadBtn');
+  btn.classList.add('spin');
+  const ok=await binLoad();
+  btn.classList.remove('spin');
+  if(ok){showToast('✅ Dados atualizados','ok');buildAll();}
+  else   showToast('⚠ Sem conexão','');
+}
+
+function buildAll(){
+  updateMensal();
+  buildTrimestral();
+  buildAnual();
+}
+
+// ── PANELS ──────────────────────────────────────────────────────────
+function showPanel(name){
+  activePanel=name;
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  document.getElementById('mselBar').style.display=name==='mensal'?'flex':'none';
+  document.getElementById('content').scrollTop=0;
+}
+
+// ── MENSAL ──────────────────────────────────────────────────────────
+function updateMensal(){
+  const mi=parseInt(document.getElementById('monthSel').value);
+  const vals=SECTORS.map((_,si)=>SCORES[mi]?SCORES[mi][si]||0:0);
+  const valid=vals.filter(v=>v>0);
+  const comps=vals.map((v,i)=>({i,c:comp(mi,i)}));
+
+  // KPIs
+  const kpiGrid=document.getElementById('kpiGrid');
+  kpiGrid.innerHTML='';
+  if(!valid.length){kpiGrid.innerHTML='<div class="empty" style="grid-column:span 2">Sem dados para este mês</div>';return;}
+  const mean=avg(vals);
+  const maxV=Math.max(...valid),minV=Math.min(...valid);
+  const bestI=comps.filter(x=>vals[x.i]===maxV).sort((a,b)=>b.c-a.c)[0].i;
+  const worstI=comps.filter(x=>vals[x.i]===minV).sort((a,b)=>a.c-b.c)[0].i;
+  const ok=mean>=META;
+
+  kpiGrid.innerHTML=`
+  <div class="kpi k-avg">
+    <div class="kpi-lbl">Média Geral</div>
+    <div class="kpi-val ${ok?'gn':'rd'}">${mean.toFixed(1)}<small style="font-size:14px;font-weight:400;color:var(--muted)">/20</small></div>
+    <div class="kpi-sub ${ok?'ok':'warn'}">${ok?'✔ Acima da meta':'⚠ Abaixo da meta'} (${META})</div>
+  </div>
+  <div class="kpi k-best">
+    <div class="kpi-lbl">Destaque</div>
+    <div class="kpi-val gn" style="font-size:16px">${SECTORS[bestI]}</div>
+    <div class="kpi-sub">${maxV} pts</div>
+  </div>
+  <div class="kpi k-worst">
+    <div class="kpi-lbl">Requer Atenção</div>
+    <div class="kpi-val rd" style="font-size:16px">${SECTORS[worstI]}</div>
+    <div class="kpi-sub">${minV} pts</div>
+  </div>
+  ${buildEvoKpi(mi,vals)}`;
+
+  // Ranking
+  const sorted=[...SECTORS.map((_,i)=>i)].filter(i=>vals[i]>0).sort((a,b)=>comp(mi,b)-comp(mi,a));
+
+  // Podium
+  const podEl=document.getElementById('podium');
+  const top3=sorted.slice(0,3);
+  const order=[top3[1],top3[0],top3[2]]; // 2-1-3
+  const classes=['p2','p1','p3'];
+  const labels=['2','1','3'];
+  podEl.innerHTML=order.map((si,i)=>si===undefined?`<div style="flex:1"></div>`:
+    `<div class="pod-item">
+      <div class="pod-name">${SECTORS[si]}</div>
+      <div class="pod-pts">${vals[si]} pts</div>
+      <div class="pod-bar ${classes[i]}">${labels[i]}</div>
+    </div>`
+  ).join('');
+
+  // List
+  const list=document.getElementById('rankList');
+  list.innerHTML=sorted.map((si,pos)=>{
+    const v=vals[si];
+    const prev=mi>0&&SCORES[mi-1]?SCORES[mi-1][si]||0:0;
+    const delta=prev>0?v-prev:null;
+    const sc=scoreColor(v);
+    const icon=pos===0?'🥇':pos===1?'🥈':pos===2?'🥉':'';
+    const varHtml=delta===null?`<span class="rk-var eq">—</span>`:
+      delta>0?`<span class="rk-var up">▲${delta}</span>`:
+      delta<0?`<span class="rk-var dn">▼${Math.abs(delta)}</span>`:
+      `<span class="rk-var eq">→Est</span>`;
+    return `<div class="rank-row">
+      <div class="rk-pos">${icon?`<span class="pos-ico">${icon}</span>`:`<span class="pos-num">#${pos+1}</span>`}</div>
+      <div class="rk-name">${SECTORS[si]}</div>
+      <div class="rk-ant">${prev>0?prev:'—'}</div>
+      <div class="rk-nota"><div class="nota-badge ${sc.cls}">${v}</div></div>
+      ${varHtml}
+    </div>`;
+  }).join('');
+}
+
+function buildEvoKpi(mi,vals){
+  if(mi===0)return`<div class="kpi k-evo"><div class="kpi-lbl">Maior Evolução</div><div class="kpi-val bl" style="font-size:16px">—</div><div class="kpi-sub">Primeiro mês</div></div>`;
+  const deltas=vals.map((v,i)=>{const a=SCORES[mi-1]?SCORES[mi-1][i]||0:0;return(v>0&&a>0)?{i,d:v-a}:{i,d:-999};}).sort((a,b)=>b.d-a.d);
+  const best=deltas[0];
+  if(best.d<=0)return`<div class="kpi k-evo"><div class="kpi-lbl">Maior Evolução</div><div class="kpi-val bl" style="font-size:16px">Nenhuma</div><div class="kpi-sub">Sem melhora no mês</div></div>`;
+  return`<div class="kpi k-evo"><div class="kpi-lbl">Maior Evolução</div><div class="kpi-val bl" style="font-size:16px">${SECTORS[best.i]}</div><div class="kpi-sub up">▲ ${best.d} pts vs ${ABBR[mi-1]}</div></div>`;
+}
+
+// ── TRIMESTRAL ──────────────────────────────────────────────────────
+function triSum(months){return SECTORS.map((_,si)=>months.reduce((acc,mi)=>acc+((SCORES[mi]||[])[si]||0),0));}
+function compTri(months,si){
+  const total=months.reduce((acc,mi)=>acc+((SCORES[mi]||[])[si]||0),0);
+  if(!total)return 0;
+  const ss=[0,1,2,3,4].map(s=>months.reduce((acc,mi)=>acc+((S_SCORES[mi]&&S_SCORES[mi][si])?S_SCORES[mi][si][s]:0),0));
+  return total*1e12+ss[0]*1e11+ss[1]*1e10+ss[2]*1e9+ss[3]*1e8+ss[4]*1e7;
+}
+
+function buildTrimestral(){
+  const grid=document.getElementById('triGrid');
+  grid.innerHTML=QUARTERS.map((q,qi)=>{
+    const sums=triSum(q.months);
+    const meses=q.months.filter(m=>hasData(m));
+    const medias=meses.map(mi=>{const v=Object.values(SCORES[mi]||{}).filter(x=>x>0);return v.length?v.reduce((a,b)=>a+b,0)/v.length:0;}).filter(x=>x>0);
+    const media=medias.length?medias.reduce((a,b)=>a+b,0)/medias.length:null;
+    const hasAny=sums.some(v=>v>0);
+    const sorted=[...SECTORS.map((_,i)=>i)].filter(i=>sums[i]>0).sort((a,b)=>compTri(q.months,b)-compTri(q.months,a));
+    const colors=['#C8102E','#2E7D32','#1565C0','#6A6460'];
+    return`<div class="tri-card">
+      <div class="tri-head" style="border-bottom:3px solid ${colors[qi]}">
+        <div><div class="tri-title">${q.label} · ${q.months.map(m=>ABBR[m]).join(' + ')}</div>
+        <div class="tri-months">${meses.length} mês${meses.length!==1?'es':''} auditado${meses.length!==1?'s':''}</div></div>
+        <div class="tri-media">${media?(media*meses.length).toFixed(1):'—'}</div>
+      </div>
+      <div class="tri-body">${!hasAny?`<div class="tri-empty">Sem dados neste trimestre</div>`:
+        sorted.slice(0,5).map((si,pos)=>{
+          const icon=pos===0?'🥇':pos===1?'🥈':pos===2?'🥉':'';
+          return`<div class="tri-row">
+            ${icon?`<div class="tri-rank-num">${icon}</div>`:`<div class="tri-rank-pos">#${pos+1}</div>`}
+            <div class="tri-row-name">${SECTORS[si]}</div>
+            <div class="tri-row-pts">${sums[si]}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── ANUAL ───────────────────────────────────────────────────────────
+function compAnual(si){
+  const months=Array.from({length:12},(_,i)=>i);
+  const total=months.reduce((acc,mi)=>acc+((SCORES[mi]||[])[si]||0),0);
+  if(!total)return 0;
+  const ss=[0,1,2,3,4].map(s=>months.reduce((acc,mi)=>acc+((S_SCORES[mi]&&S_SCORES[mi][si])?S_SCORES[mi][si][s]:0),0));
+  return total*1e12+ss[0]*1e11+ss[1]*1e10+ss[2]*1e9+ss[3]*1e8+ss[4]*1e7;
+}
+
+function buildAnual(){
+  const allMonths=Array.from({length:12},(_,i)=>i);
+  const sums=SECTORS.map((_,si)=>allMonths.reduce((acc,mi)=>acc+((SCORES[mi]||[])[si]||0),0));
+  const mesesAuditados=allMonths.filter(m=>hasData(m));
+  const valid=sums.filter(v=>v>0);
+  const mediaMensal=mesesAuditados.length?
+    mesesAuditados.map(mi=>{const v=Object.values(SCORES[mi]||{}).filter(x=>x>0);return v.length?v.reduce((a,b)=>a+b,0)/v.length:0;}).filter(x=>x>0).reduce((a,b)=>a+b,0)/mesesAuditados.length:null;
+  const maxV=valid.length?Math.max(...valid):0;
+  const minV=valid.length?Math.min(...valid):0;
+  const bestI=sums.indexOf(maxV);
+  const worstI=sums.indexOf(minV);
+  const okAnual=mediaMensal&&mediaMensal>=META;
+
+  // KPIs
+  const kpis=document.getElementById('anualKpis');
+  kpis.innerHTML=`
+  <div class="kpi k-avg">
+    <div class="kpi-lbl">Meses Auditados</div>
+    <div class="kpi-val" style="font-size:28px">${mesesAuditados.length}<small style="font-size:14px;font-weight:400;color:var(--muted)">/12</small></div>
+    <div class="kpi-sub">Em 2026</div>
+  </div>
+  <div class="kpi k-avg">
+    <div class="kpi-lbl">Média Mensal</div>
+    <div class="kpi-val ${okAnual?'gn':'rd'}">${mediaMensal?mediaMensal.toFixed(1)+'<small style="font-size:14px;font-weight:400;color:var(--muted)">/20</small>':'—'}</div>
+    <div class="kpi-sub ${okAnual?'ok':'warn'}">${mediaMensal?(okAnual?'✔ Acima da meta':'⚠ Abaixo da meta'):''}</div>
+  </div>
+  <div class="kpi k-best">
+    <div class="kpi-lbl">Destaque Anual</div>
+    <div class="kpi-val gn" style="font-size:16px">${maxV>0?SECTORS[bestI]:'—'}</div>
+    <div class="kpi-sub">${maxV>0?maxV+' pts acumulados':''}</div>
+  </div>
+  <div class="kpi k-worst">
+    <div class="kpi-lbl">Requer Atenção</div>
+    <div class="kpi-val rd" style="font-size:16px">${minV>0?SECTORS[worstI]:'—'}</div>
+    <div class="kpi-sub">${minV>0?minV+' pts acumulados':''}</div>
+  </div>`;
+
+  // List
+  const sorted=[...SECTORS.map((_,i)=>i)].filter(i=>sums[i]>0).sort((a,b)=>compAnual(b)-compAnual(a));
+  const list=document.getElementById('anualList');
+  list.innerHTML=sorted.map((si,pos)=>{
+    const mesesSi=allMonths.filter(m=>SCORES[m]&&SCORES[m][si]>0).length;
+    const mediaSi=mesesSi?sums[si]/mesesSi:0;
+    const sc=scoreColor(Math.round(mediaSi));
+    const icon=pos===0?'🥇':pos===1?'🥈':pos===2?'🥉':'';
+    return`<div class="anual-row">
+      <div class="anual-num">${icon?`<span style="font-size:18px">${icon}</span>`:`<span style="font-size:12px;font-weight:900;color:var(--muted)">#${pos+1}</span>`}</div>
+      <div class="anual-name">${SECTORS[si]}</div>
+      <div class="anual-media">${mediaSi.toFixed(1)}</div>
+      <div class="anual-soma"><div class="nota-badge ${sc.cls}">${sums[si]}</div></div>
+    </div>`;
+  }).join('');
+}
+
+// ── INIT ────────────────────────────────────────────────────────────
+async function init(){
+  // Selecionar mês com dados mais recentes
+  const ok=await binLoad();
+  if(!ok){showToast('⚠ Sem conexão com o servidor','');}
+  // Detectar mês mais recente com dados
+  let best=0;
+  for(let m=11;m>=0;m--){if(hasData(m)){best=m;break;}}
+  document.getElementById('monthSel').value=best;
+  buildAll();
+}
+</script>
+</body>
+</html>
